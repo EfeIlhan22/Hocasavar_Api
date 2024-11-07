@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import website.api.dto.YorumDto;
+import website.api.exceptions.HocaNotFoundException;
 import website.api.exceptions.YorumNotFoundException;
 import website.api.model.Hoca;
 import website.api.model.Yorum;
