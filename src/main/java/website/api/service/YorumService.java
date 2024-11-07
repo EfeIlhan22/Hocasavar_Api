@@ -1,17 +1,15 @@
 package website.api.service;
 
+import java.util.List;
+
 import website.api.dto.YorumDto;
-import website.api.dto.YorumResponse;
 
 public interface YorumService {
-    YorumDto createYorum(YorumDto yorumDto);
+    YorumDto createYorum(int hoca_id, YorumDto yorumDto);
 
-    YorumResponse getAllYorums(int pageNumber , int pageSize);
+    YorumDto updateYorumById(YorumDto yorumDto , int yorum_id, int hoca_id);
 
-    YorumDto getYorumById(int id);
+    void deleteYorumById(int yorum_id,int hoca_id);
 
-    YorumDto updateYorumById(YorumDto yorumDto , int id);
-
-    void deleteYorumById(int id);
-    
+    List<YorumDto> getYorumByHocaId(int id);    
 }

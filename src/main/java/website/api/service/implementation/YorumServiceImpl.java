@@ -3,15 +3,13 @@ package website.api.service.implementation;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import website.api.dto.YorumDto;
-import website.api.dto.YorumResponse;
 import website.api.exceptions.YorumNotFoundException;
+import website.api.model.Hoca;
 import website.api.model.Yorum;
+import website.api.repository.HocaRepository;
 import website.api.repository.YorumRepository;
 import website.api.service.YorumService;
 
@@ -19,75 +17,53 @@ import website.api.service.YorumService;
 @Service
 public class YorumServiceImpl implements YorumService {
     
-    private final YorumRepository yorumRepository;
+    private final  YorumRepository yorumRepository;
+    private final HocaRepository hocaRepository;
 
-
-    public YorumServiceImpl(YorumRepository yorumRepository) {
+    //@Autowirred
+    public YorumServiceImpl(YorumRepository yorumRepository,HocaRepository hocaRepository) {
         this.yorumRepository = yorumRepository;
+        this.hocaRepository = hocaRepository;   
     }
 
     @Override
-    public YorumDto createYorum(YorumDto yorumDto) {
-       Yorum yorum = new Yorum();
-       yorum.setUsername(yorumDto.getUsername());
-       yorum.setNefretsebebi(yorumDto.getNefretsebebi());
-       yorum.setPhoto_data_path(yorumDto.getPhoto_data_path());
-       yorum.setStartTime(yorumDto.getStartTime());
-       yorum.setYorum(yorumDto.getYorum());
-       yorum.setLike_count(yorumDto.getLike_count());
-       
-       Yorum newYorum= yorumRepository.save(yorum);
-       YorumDto yorumResponse = new YorumDto();
-       yorumResponse.setUsername(newYorum.getUsername());
-       yorumResponse.setNefretsebebi(newYorum.getNefretsebebi());
-       yorumResponse.setPhoto_data_path(newYorum.getPhoto_data_path());
-       yorumResponse.setStartTime(newYorum.getStartTime());
-       yorumResponse.setYorum(newYorum.getYorum());
-       yorumResponse.setLike_count(newYorum.getLike_count());
+    public YorumDto createYorum(int hoca_id,YorumDto yorumDto) {
+       Yorum yorum = maptoYorum(yorumDto);
+       Hoca hoca = hocaRepository.findById(hoca_id).orElseThrow(() -> new HocaNotFoundException("İlintili hoca bulunamadı"));
 
-       return yorumResponse;
+       yorum.setHoca(hoca);
+
+       Yorum newYorum = yorumRepository.save(yorum);
+
+       return maptoDto(newYorum);
     }
 
     @Override
-    public YorumResponse getAllYorums(int pageNo,int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Yorum> yorums = yorumRepository.findAll(pageable);
-        List<Yorum> listOfYorums = yorums.getContent();
-        List<YorumDto> content = listOfYorums.stream().map(y->maptoDto(y)).collect(Collectors.toList());
+    public YorumDto updateYorumById(YorumDto yorumDto, int yorum_id,int hoca_id) {
+       Hoca hoca = hocaRepository.findById(hoca_id).orElseThrow(() -> new HocaNotFoundException("Aradığnız hoca bulunamadı"));
 
-        YorumResponse yorumResponse = new YorumResponse();
-        yorumResponse.setContent(content);
-        yorumResponse.setPageNumber(yorums.getNumber());
-        yorumResponse.setPageSize(yorums.getSize());
-        yorumResponse.setTotalElements(yorums.getNumberOfElements());
-        yorumResponse.setTotalPages(yorums.getTotalPages());
-        yorumResponse.setLast(yorums.isLast());
-        return yorumResponse;
+       Yorum yorum = yorumRepository.findById(yorum_id).orElseThrow(() -> new YorumNotFoundException("Aradığnız yorum bulunamadı"));
+    
+       if(yorum.getHoca().getId() != hoca.getId()) {
+        throw new YorumNotFoundException("Bu yorum bu hocaya ait değil!");
     }
-
-    @Override
-    public YorumDto getYorumById(int id) {
-        Yorum yorum = yorumRepository.findById(id).orElseThrow(()-> new YorumNotFoundException("Yorum bulunamadı"));
-        return maptoDto(yorum);
-    }
-
-    @Override
-    public YorumDto updateYorumById(YorumDto yorumDto, int id) {
-        Yorum yorum = yorumRepository.findById(id).orElseThrow(()-> new YorumNotFoundException("Güncellemek istediğiniz yorum bulunamadı"));
-        
-        yorum.setUsername(yorumDto.getUsername());
         yorum.setNefretsebebi(yorumDto.getNefretsebebi());
-        yorum.setPhoto_data_path(yorumDto.getPhoto_data_path());
-        yorum.setStartTime(yorumDto.getStartTime());
         yorum.setYorum(yorumDto.getYorum());
-        yorum.setLike_count(yorumDto.getLike_count());
-        
-        return maptoDto(yorum);
+
+
+        Yorum updateYorum = yorumRepository.save(yorum);
+        return maptoDto(updateYorum);
     }
 
     @Override
-    public void deleteYorumById(int id) {
-        Yorum yorum = yorumRepository.findById(id).orElseThrow(()-> new YorumNotFoundException("Silmek istediğiniz yorum bulunamadı"));
+    public void deleteYorumById(int yorum_id,int hoca_id) {
+       Hoca hoca = hocaRepository.findById(hoca_id).orElseThrow(() -> new HocaNotFoundException("Aradığnız hoca bulunamadı"));
+
+       Yorum yorum = yorumRepository.findById(yorum_id).orElseThrow(() -> new YorumNotFoundException("Aradığınız yorum bulunamadı"));
+    
+       if(yorum.getHoca().getId() != hoca.getId()) {
+        throw new YorumNotFoundException("Bu yorum bu hocaya ait değil!");
+    }
         yorumRepository.delete(yorum);
     }
 
@@ -114,5 +90,11 @@ public class YorumServiceImpl implements YorumService {
         yorum.setYorum(yorumDto.getYorum());
         yorum.setLike_count(yorumDto.getLike_count());
         return yorum;
+    }
+
+    @Override
+    public List<YorumDto> getYorumByHocaId(int id) {
+        List<Yorum> yorums = yorumRepository.findByHocaId(id);
+        return yorums.stream().map(yorum->maptoDto(yorum)).collect(Collectors.toList());
     }
 }

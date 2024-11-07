@@ -1,5 +1,7 @@
 package website.api.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,13 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import website.api.dto.YorumDto;
-import website.api.dto.YorumResponse;
 import website.api.service.YorumService;
+
 
 
 
@@ -31,37 +31,26 @@ public class YorumController {
         this.yorumService = yorumService;
     }
 
-
-
-
-    @GetMapping("yorum")
-    public ResponseEntity <YorumResponse> getYorums(
-        @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize
-        ){ 
-        return new ResponseEntity<>(yorumService.getAllYorums(pageNo,pageSize) , HttpStatus.OK);
-    }
-    
-    @GetMapping("yorum/{id}")
-    public ResponseEntity<YorumDto> YorumDetail(@PathVariable int id){
-        return  ResponseEntity.ok(yorumService.getYorumById(id));
+    @PostMapping("hoca/{hoca_id}/yorumlar")
+    public ResponseEntity<YorumDto> createYorum(@PathVariable(value = "hoca_id") int hoca_id , @RequestBody YorumDto yorumDto){
+      return new ResponseEntity<>(yorumService.createYorum(hoca_id,yorumDto), HttpStatus.CREATED);
     }
 
-    @PostMapping("yorum/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<YorumDto> createYorum(@RequestBody YorumDto YorumDto){
-      return new ResponseEntity<>(yorumService.createYorum(YorumDto), HttpStatus.CREATED);
-    }
-
-    @PutMapping("yorum/{id}/update")
-    public ResponseEntity<YorumDto> updateYorum(@RequestBody YorumDto YorumDto , @PathVariable("id") int Yorum_id){
-        YorumDto  response = yorumService.updateYorumById(YorumDto, Yorum_id);
+    @PutMapping("hoca/{hoca_id}/yorumlar/{id}/update")
+    public ResponseEntity<YorumDto> updateYorum(@RequestBody YorumDto YorumDto , @PathVariable(value="id") int Yorum_id,@PathVariable(value = "hoca_id") int hoca_id ){
+        YorumDto  response = yorumService.updateYorumById(YorumDto, Yorum_id,hoca_id);
         return new ResponseEntity<>(response,HttpStatus.OK); 
     }
 
-    @DeleteMapping("Yorum/{id}/delete")
-    public ResponseEntity<String> deleteYorum(@PathVariable("id") int yorum_id){
-         yorumService.deleteYorumById(yorum_id);
+    @DeleteMapping("hoca/{hoca_id}/delete/{id}")
+    public ResponseEntity<String> deleteYorum(@PathVariable(value="id") int yorum_id,@PathVariable(value = "hoca_id") int hoca_id ){
+         yorumService.deleteYorumById(yorum_id,hoca_id);
          return new ResponseEntity<>("Yorum silindi",HttpStatus.OK);
     }
+
+    @GetMapping("/hoca/{hoca_id}/yorumlar")
+    public List<YorumDto> getYorumByHocaId(@PathVariable (value="hoca_id")int hoca_id) {
+        return yorumService.getYorumByHocaId(hoca_id);
+    }
+    
 }

@@ -47,12 +47,6 @@ public class HocaServiceImpl implements HocaService {
         hocaDto.setName(hoca.getName());
         return hocaDto;
     }
-    private Hoca mapToEntity(HocaDto hocaDto){
-        Hoca hoca = new Hoca();
-        hoca.setId(hocaDto.getId());
-        hoca.setName(hocaDto.getName());
-        return hoca;
-    }
 
 
     @Override

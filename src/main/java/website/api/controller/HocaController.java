@@ -26,13 +26,9 @@ public class HocaController {
 
     private final HocaService hocaService;
 
-   //@Autowired
     public HocaController(HocaService hocaService) {
         this.hocaService = hocaService;
     }
-
-
-
 
     @GetMapping("hoca")
     public ResponseEntity <List<HocaDto>> getHocas(){

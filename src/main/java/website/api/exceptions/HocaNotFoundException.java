@@ -6,5 +6,5 @@ public class HocaNotFoundException extends RuntimeException{
     public HocaNotFoundException(String message){
         super(message);
     }
-    
+
 }
